@@ -1,0 +1,3 @@
+[submodule "bamsurgeon"]
+	path = bamsurgeon
+	url = https://github.com/adamewing/bamsurgeon

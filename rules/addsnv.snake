@@ -1,18 +1,13 @@
+threads = 4
 
-"""
-Rules for modifying SAM or BAM files. Need samtools in your path and config
-needs to set picard location with jars in 'picard_jars'.
+rule addsnvs:
+    input:
+        "varsets/{num}.snps.txt"
+    output:
+        "bam/{num}.snps.bam"
+    threads: 8
+    shell:
+        """
+            bamsurgeon/addsnv.py --reference {reference} --procs {threads} --maxdepth 2000 -v {input}
+        """
 
-For usage, include this in your workflow.
-"""
-
-import os
-
-
-__author__ = "Daniel E. Cook"
-__license__ = "MIT"
-
-bamlist = ["/Volumes/PortusTutus/bam/N2.bam"]
-
-rule variant_sets:
-    

@@ -1,9 +1,9 @@
 
-
+reference = "reference/{genome_name}/{genome_name}.fa.gz".format(genome_name = config["genome_name"])
 
 rule download_genome:
     output:
-        "reference/{genome_name}/{genome_name}.fa.gz".format(genome_name = config["genome_name"])
+        reference
     message: 
         "Downloading {config[genome_name]}"
     shell:
@@ -56,3 +56,4 @@ rule setup_genome_done:
         rules.setup_blast_db.output
     output:
         touch("log/setup_genome.done")
+
