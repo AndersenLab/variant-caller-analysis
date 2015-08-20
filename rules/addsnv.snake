@@ -1,13 +1,29 @@
 threads = 4
 
+
+
 rule addsnvs:
     input:
         "varsets/{num}.snps.txt"
     output:
-        "bam/{num}.snps.bam"
+    	spiked_bam = "bam/{num}.snps.bam",
+        sorted_bam = "bam/{num}.snps.sorted.bam",
+        indices = "bam/{num}.snps.sorted.bam.bai"
     threads: 8
     shell:
         """
-            bamsurgeon/addsnv.py --reference {reference} --procs {threads} --maxdepth 2000 -v {input}
+            bamsurgeon/addsnv.py --reference {reference} \
+            					 --tmpdir tmp \
+            					 --procs {threads} \
+            					 --maxdepth 2000 \
+            					 --mindepth 1 \
+            					 --mutfrac 1.0 \
+            					 -v {input} \
+            					 --bamfile {config[bam_location]} \
+            					 --aligner mem \
+            					 --picardjar tools/picard.jar \
+            					 --outbam {output.spiked_bam}
+            samtools sort -@ {threads} -T bam/{wildcards.num}.sorting -O bam {output.spiked_bam} > {output.sorted_bam}
+            samtools index {output.sorted_bam}
         """
 

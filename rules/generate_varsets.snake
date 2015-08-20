@@ -20,7 +20,7 @@ def parse_fai(fai, weight = False):
         else:
             return OrderedDict(chrom_length)
 
-def generate_random_sites(fai, num_sites = 100000):
+def generate_random_sites(fai, num_sites = config["num_locations"]):
     """
         Generates random sites from a reference genome without replacement.
     """
