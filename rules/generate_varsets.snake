@@ -1,3 +1,7 @@
+from random import sample
+from collections import OrderedDict
+from bisect import bisect_left
+
 
 varsets = ["varsets/{0:0>2}.varset.txt".format(x) for x in range(1,config["num_location_files"]+1)]
 
@@ -16,7 +20,7 @@ def parse_fai(fai, weight = False):
         else:
             return OrderedDict(chrom_length)
 
-def generate_random_sites(fai, num_sites = 1000):
+def generate_random_sites(fai, num_sites = 100000):
     """
         Generates random sites from a reference genome without replacement.
     """
@@ -29,8 +33,8 @@ def generate_random_sites(fai, num_sites = 1000):
         breakpoints.append(start + v)
         start = start + v
     genome_length = sum(fai.values())
-    chromosomes = fai.keys()
-    sites = sorted(sample(xrange(genome_length), num_sites))
+    chromosomes = list(fai.keys())
+    sites = sorted(sample(range(genome_length), num_sites))
     chromosomes =  [chromosomes[bisect_left(breakpoints, x)] for x in sites]
     # Process sites
     for k, site in enumerate(sites):
@@ -48,4 +52,9 @@ rule generate_varsets:
         varsets,
         touch("log/generate_varsets.done")
     run:
-        print("GREAT")
+        for varset in varsets:
+            with open(varset,"w") as f:
+                for chrom,pos in generate_random_sites(input.fai_file):
+                    colset = list(map(str, [chrom, pos, pos, 1.0]))
+                    line = "\t".join(colset) + "\n"
+                    f.write(line)
