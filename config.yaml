@@ -1,0 +1,4 @@
+reference_source: ftp://ftp.wormbase.org/pub/wormbase/species/c_elegans/sequence/genomic/c_elegans.PRJNA13758.WS245.genomic.fa.gz
+genome_name: WS245
+num_locations: 100000
+num_location_files: 10
