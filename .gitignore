@@ -3,6 +3,8 @@
 
 # bio
 reference/
+*.bam
+*.bai
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
