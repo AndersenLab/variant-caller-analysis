@@ -1,7 +1,5 @@
 threads = 4
 
-
-
 rule addsnvs:
     input:
         "varsets/{num}.snps.txt"
@@ -27,3 +25,24 @@ rule addsnvs:
             samtools index {output.sorted_bam}
         """
 
+
+rule collate_snvs:
+    input:
+        "bam/{num}.snps.sorted.bam",
+        "bam/{num}.snps.sorted.bam.bai"
+    output:
+        "spikeins/{num}.txt"
+    shell:
+        """
+        mkdir -p spikeins
+        for i in `ls -1 addsnv_logs_{wildcards.num}.snps.bam/*`; do
+            grep "^snv" ${{i}}
+            grep "^snv" ${{i}} >> {output}
+        done;
+        if [[ -s {output} ]]
+        then
+            exit 0;
+        else
+            exit 1;
+        fi
+        """

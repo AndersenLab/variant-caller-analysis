@@ -5,7 +5,8 @@ varfiles = ["{0:0>2}".format(x) for x in range(1,config["num_location_files"] + 
 rule all:
     input:
         "log/setup_genome.done",
-        expand("bam/{num}.snps.bam", num = varfiles)
+        expand("bam/{num}.snps.bam", num = varfiles),
+        expand("spikeins/{num}.txt", num = varfiles)
 
 rule download_picard:
     output:
