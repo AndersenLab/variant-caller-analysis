@@ -1,0 +1,42 @@
+
+
+
+chrom = ["I","II","III","IV","V","X"]
+var_call = ["-m","-c"]
+
+rule call_variants:
+    input:
+        bam = "bam/{num}.snps.sorted.bam"
+    output:
+        vcf = temp(expand("vcf/{{num}}.{chrom}.{var_call}.vcf", chrom = chrom, var_call = var_call))
+    threads: 8
+    message: "Calling {threads}"
+    shell:
+        """
+            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v {{2}} - > vcf/{wildcards.num}.{{1}}.{{2}}.vcf" ::: {chrom} ::: {var_call}
+            exit 0
+        """
+
+
+
+rule concat_variants:
+    input: 
+        expand("vcf/{{num}}.{chrom}.{{var_call}}.vcf", chrom = chrom)
+    output:
+        "vcf/{num,\d+}.{var_call}.vcf.gz" 
+    shell:
+        """
+            bcftools concat {input} | bcftools view -O z > {output}
+            exit 0
+        """
+
+rule index_variants:
+    input:
+        rules.concat_variants.output
+    output:
+        vcf_called_index = "vcf/{num}.vcf.gz.idx"
+    shell:
+        """
+            bcftools index {output.vcf_called}
+        """
+
