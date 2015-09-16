@@ -1,3 +1,5 @@
+from subprocess import check_output
+
 configfile: "config.yaml"
 
 varfiles = ["{0:0>2}".format(x) for x in range(1,config["num_location_files"] + 1)]

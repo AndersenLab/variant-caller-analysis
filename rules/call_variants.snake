@@ -6,6 +6,7 @@ rule call_variants:
     output:
         vcf = temp(expand("vcf/{{num}}.{{grouping}}.{chrom}.{var_call}.vcf", chrom = chrom, var_call = var_call))
     threads: 8
+    version: check_output("bcftools --version", shell=True)
     message: "Calling {threads}"
     shell:
         """
@@ -19,9 +20,10 @@ rule concat_variants:
         expand("vcf/{{num}}.{{grouping}}.{chrom}.{{var_call}}.vcf", chrom = chrom, grouping = grouping)
     output:
         "vcf/{num,\d+}.{grouping}.{var_call}.vcf.gz" 
+    version: check_output("bcftools --version", shell=True)
     shell:
         """
-            bcftools concat {input} | python het_polarization.py | bcftools view -O z > {output}
+            bcftools concat {input} | python scripts/het_polarization.py | bcftools view -O z > {output}
             exit 0
         """
 
@@ -30,6 +32,7 @@ rule index_variants:
         rules.concat_variants.output
     output:
         vcf_called_index = "vcf/{num}.{grouping}.{var_call}.vcf.gz.idx"
+    version: check_output("bcftools --version", shell=True)
     shell:
         """
             bcftools index {input}

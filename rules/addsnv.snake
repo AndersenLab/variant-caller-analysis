@@ -54,6 +54,7 @@ rule merge_joint_bams:
         merge_bams = expand("{pf}/{bams}.bam",pf = config["joint_bam_path"],  bams = config["joint_bams"])
     output:
         "bam/{num}.joint.snps.sorted.bam"
+    version: check_output("samtools --version", shell=True)
     shell:
         """
             samtools merge - {input.primary_bam} {input.merge_bams} | samtools sort -@ 6 -T {wildcards.num} -O bam > {output}
@@ -65,6 +66,7 @@ rule index_joint_bam:
         "bam/{num}.joint.snps.sorted.bam"
     output:
         "bam/{num}.joint.snps.sorted.bam.bai"
+    version: check_output("samtools --version", shell=True)
     shell:
         """
             samtools index {input}
