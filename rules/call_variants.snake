@@ -21,7 +21,7 @@ rule concat_variants:
         "vcf/{num,\d+}.{grouping}.{var_call}.vcf.gz" 
     shell:
         """
-            bcftools concat {input} | bcftools view -O z > {output}
+            bcftools concat {input} | python het_polarization.py | bcftools view -O z > {output}
             exit 0
         """
 
