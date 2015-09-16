@@ -2,11 +2,11 @@ threads = 4
 
 rule addsnvs:
     input:
-        "varsets/{num}.snps.txt"
+        "varsets/{num,\d+}.snps.txt"
     output:
-    	spiked_bam = "bam/{num}.snps.bam",
-        sorted_bam = "bam/{num}.snps.sorted.bam",
-        indices = "bam/{num}.snps.sorted.bam.bai"
+    	spiked_bam = temp("bam/{num,\d+}.snps.bam"),
+        sorted_bam = "bam/{num,\d+}.individual.snps.sorted.bam",
+        indices = "bam/{num,\d+}.individual.snps.sorted.bam.bai"
     threads: 8
     shell:
         """
@@ -28,8 +28,8 @@ rule addsnvs:
 
 rule collate_snvs:
     input:
-        "bam/{num}.snps.sorted.bam",
-        "bam/{num}.snps.sorted.bam.bai"
+        "bam/{num}.individual.snps.sorted.bam",
+        "bam/{num}.individual.snps.sorted.bam.bai"
     output:
         "spikeins/{num}.txt"
     shell:
@@ -45,4 +45,27 @@ rule collate_snvs:
         else
             exit 1;
         fi
+        """
+
+rule merge_joint_bams:
+    # Merges in divergent panel of wild isolate variants
+    input:
+        primary_bam = "bam/{num}.individual.snps.sorted.bam",
+        merge_bams = expand("{pf}/{bams}.bam",pf = config["joint_bam_path"],  bams = config["joint_bams"])
+    output:
+        "bam/{num}.joint.snps.sorted.bam"
+    shell:
+        """
+            samtools merge - {input.primary_bam} {input.merge_bams} | samtools sort -@ 6 -T {wildcards.num} -O bam > {output}
+        """
+
+
+rule index_joint_bam:
+    input:
+        "bam/{num}.joint.snps.sorted.bam"
+    output:
+        "bam/{num}.joint.snps.sorted.bam.bai"
+    shell:
+        """
+            samtools index {input}
         """

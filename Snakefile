@@ -1,15 +1,19 @@
 configfile: "config.yaml"
 
 varfiles = ["{0:0>2}".format(x) for x in range(1,config["num_location_files"] + 1)]
+
+chrom = ["I","II","III","IV","V","X"]
 var_call = ["-m","-c"]
+grouping = ["individual", "joint"]
 
 
 rule all:
     input:
         "log/setup_genome.done",
-        expand("bam/{num}.snps.bam", num = varfiles),
+        expand("bam/{num}.{grouping}.snps.sorted.bam", num = varfiles, grouping = grouping),
+        expand("bam/{num}.{grouping}.snps.sorted.bam.bai", num = varfiles, grouping = grouping),
         expand("spikeins/{num}.txt", num = varfiles),
-        expand("vcf/{num}.{var_call}.vcf.gz", num = varfiles, var_call = var_call),
+        expand("vcf/{num}.{grouping}.{var_call}.vcf.gz", num = varfiles,  grouping = grouping, var_call = var_call),
 
 
 rule download_picard:

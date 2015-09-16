@@ -3,3 +3,27 @@ genome_name: WS245
 num_locations: 150
 num_location_files: 3
 bam_location: /Users/dancook/Documents/git/variant-caller-analysis/test/QX175.sorted.bam
+joint_bam_path: /Users/dancook/Documents/git/variant-caller-analysis/test
+joint_bams:
+  - QX15
+joint_set2:
+  - CB4856
+  - DL238
+  - LKC34
+  - JT11398
+  - ED3017
+  - MY16
+  - MY23
+  - JU775
+  - JU258
+  - EG4725
+  - CX11314
+  - PB306
+  - CX11276
+  - AB1
+  - JU847
+  - JU1896
+  - WN2002
+  - JU1652
+  - ED3011
+  - JU1200
