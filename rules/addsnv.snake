@@ -2,23 +2,25 @@ threads = 4
 
 rule addsnvs:
     input:
-        "varsets/{num,\d+}.snps.txt"
+        "log/setup_genome.done",
+        varset = "varsets/{num,\d+}.snps.txt"
     output:
         spiked_bam = temp("bam/{num,\d+}.snps.bam"),
     threads: 8
     shell:
         """
-            bamsurgeon/addsnv.py --reference {reference} \
+            python bamsurgeon/addsnv.py --reference {reference} \
                                  --tmpdir tmp \
                                  --procs {threads} \
                                  --maxdepth 2000 \
                                  --mindepth 1 \
-                                 --mutfrac 1.0 \
-                                 -v {input} \
+                                 -m 1.0 \
+                                 -v {input.varset} \
                                  --bamfile {config[bam_location]} \
                                  --aligner mem \
                                  --picardjar /lscr2/andersenlab/dec211/variant-caller-analysis/tools/picard.jar \
                                  --outbam {output.spiked_bam}
+
         """
 
 rule sort_bam:
@@ -28,7 +30,7 @@ rule sort_bam:
         sorted_bam = "bam/{num,\d+}.individual.snps.sorted.bam"
     shell:
         """
-            samtools sort -@ {threads} -T bam/{wildcards.num}.sorting -O bam {output.spiked_bam} > {output.sorted_bam}
+            samtools sort -@ {threads} -T bam/{wildcards.num}.sorting -O bam {input.spiked_bam} > {output.sorted_bam}
         """
 
 rule index_bam:
@@ -38,7 +40,7 @@ rule index_bam:
         indices = "bam/{num,\d+}.individual.snps.sorted.bam.bai"
     shell:
         """
-            samtools index {output.sorted_bam}
+            samtools index {input.sorted_bam}
         """
 
 
