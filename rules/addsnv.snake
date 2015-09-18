@@ -4,27 +4,40 @@ rule addsnvs:
     input:
         "varsets/{num,\d+}.snps.txt"
     output:
-    	spiked_bam = temp("bam/{num,\d+}.snps.bam"),
-        sorted_bam = "bam/{num,\d+}.individual.snps.sorted.bam",
-        indices = "bam/{num,\d+}.individual.snps.sorted.bam.bai"
+        spiked_bam = temp("bam/{num,\d+}.snps.bam"),
     threads: 8
-    message: shell("which samtools")
     shell:
         """
-            which samtools
             bamsurgeon/addsnv.py --reference {reference} \
-            					 --tmpdir tmp \
-            					 --procs {threads} \
-            					 --maxdepth 2000 \
-            					 --mindepth 1 \
-            					 --mutfrac 1.0 \
-            					 -v {input} \
-            					 --bamfile {config[bam_location]} \
-            					 --aligner mem \
-            					 --picardjar /lscr2/andersenlab/dec211/variant-caller-analysis/tools/picard.jar \
-            					 --outbam {output.spiked_bam}
-            which samtools
+                                 --tmpdir tmp \
+                                 --procs {threads} \
+                                 --maxdepth 2000 \
+                                 --mindepth 1 \
+                                 --mutfrac 1.0 \
+                                 -v {input} \
+                                 --bamfile {config[bam_location]} \
+                                 --aligner mem \
+                                 --picardjar /lscr2/andersenlab/dec211/variant-caller-analysis/tools/picard.jar \
+                                 --outbam {output.spiked_bam}
+        """
+
+rule sort_bam:
+    input:
+        spiked_bam = "bam/{num,\d+}.snps.bam"
+    output:
+        sorted_bam = "bam/{num,\d+}.individual.snps.sorted.bam"
+    shell:
+        """
             samtools sort -@ {threads} -T bam/{wildcards.num}.sorting -O bam {output.spiked_bam} > {output.sorted_bam}
+        """
+
+rule index_bam:
+    input:
+        sorted_bam = "bam/{num,\d+}.individual.snps.sorted.bam"
+    output:
+        indices = "bam/{num,\d+}.individual.snps.sorted.bam.bai"
+    shell:
+        """
             samtools index {output.sorted_bam}
         """
 
