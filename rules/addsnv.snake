@@ -8,8 +8,10 @@ rule addsnvs:
         sorted_bam = "bam/{num,\d+}.individual.snps.sorted.bam",
         indices = "bam/{num,\d+}.individual.snps.sorted.bam.bai"
     threads: 8
+    message: shell("which samtools")
     shell:
         """
+            which samtools
             bamsurgeon/addsnv.py --reference {reference} \
             					 --tmpdir tmp \
             					 --procs {threads} \
@@ -19,8 +21,9 @@ rule addsnvs:
             					 -v {input} \
             					 --bamfile {config[bam_location]} \
             					 --aligner mem \
-            					 --picardjar tools/picard.jar \
+            					 --picardjar /lscr2/andersenlab/dec211/variant-caller-analysis/tools/picard.jar \
             					 --outbam {output.spiked_bam}
+            which samtools
             samtools sort -@ {threads} -T bam/{wildcards.num}.sorting -O bam {output.spiked_bam} > {output.sorted_bam}
             samtools index {output.sorted_bam}
         """
