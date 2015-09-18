@@ -2,10 +2,11 @@ reference_source: ftp://ftp.wormbase.org/pub/wormbase/species/c_elegans/sequence
 genome_name: WS245
 num_locations: 150
 num_location_files: 3
-bam_location: /Users/dancook/Documents/git/variant-caller-analysis/test/QX175.sorted.bam
-joint_bam_path: /Users/dancook/Documents/git/variant-caller-analysis/test
+bam_location: /lscr2/andersenlab/dec211/RUN/20150727_RIAIL/bam/E300.bam
+joint_bam_path: /lscr2/andersenlab/dec211/RUN/20150727_RIAIL/bam
 joint_bams:
-  - QX15
+  - E351
+  - E35
 joint_set2:
   - CB4856
   - DL238
