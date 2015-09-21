@@ -54,6 +54,6 @@ rule processed_vcf:
         "vcf_processed/{num,\d+}.{grouping}.{var_call}.txt"
     shell:
         r"""
-            bcftools view -m2 -M2 {input.vcf} | vcf2tsv -g | \
+            bcftools view --samples={config[reference_sample]} -m2 -M2 {input.vcf} | vcf2tsv -g | \
             awk -v input={input.vcf} 'NR == 1 {{ print $0 "\tvarfile" }} NR > 1 {{print $0 "\t" input }}' > {output}
         """
