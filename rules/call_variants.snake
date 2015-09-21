@@ -1,40 +1,47 @@
 
-rule call_variants:
+rule call_variants_rare:
     input:
         bam = "bam/{num}.{grouping}.snps.sorted.bam",
         idx = "bam/{num}.{grouping}.snps.sorted.bam.bai"
     output:
-        vcf = temp(expand("vcf/{{num}}.{{grouping}}.{chrom}.{var_call}.vcf", chrom = chrom, var_call = var_call))
+        vcf = temp(expand("vcf/{{num}}.{{grouping}}.{chrom}.-m.vcf", chrom = chrom, var_call = var_call))
     threads: 8
-    version: check_output("bcftools --version", shell=True)
+    version: str(check_output("bcftools --version", shell=True))
     message: "Calling {threads}"
     shell:
         """
-            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v {{2}} - > vcf/{wildcards.num}.{wildcards.grouping}.{{1}}.{{2}}.vcf" ::: {chrom} ::: {var_call}
-            exit 0
+            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -m - > vcf/{wildcards.num}.{wildcards.grouping}.{{1}}.-m.vcf" ::: {chrom}
         """
 
+rule call_variants_common:
+    input:
+        bam = "bam/{num}.{grouping}.snps.sorted.bam",
+        idx = "bam/{num}.{grouping}.snps.sorted.bam.bai"
+    output:
+        vcf = temp(expand("vcf/{{num}}.{{grouping}}.{chrom}.-c.vcf", chrom = chrom, var_call = var_call))
+    threads: 8
+    version: str(check_output("bcftools --version", shell=True))
+    message: "Calling {threads}"
+    shell:
+        """
+            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -c - > vcf/{wildcards.num}.{wildcards.grouping}.{{1}}.-c.vcf" ::: {chrom}
+        """
 
 rule concat_variants:
     input: 
-        expand("vcf/{{num}}.{{grouping}}.{chrom}.{{var_call}}.vcf", chrom = chrom, grouping = grouping)
+        expand("vcf/{{num}}.{{grouping}}.{chrom}.{{var_call}}.vcf", chrom = chrom)
     output:
-        "vcf/{num,\d+}.{grouping}.{var_call}.vcf.gz" 
-    version: check_output("bcftools --version", shell=True)
+        "vcf/{num,\d+}.{grouping}.{var_call}.vcf.gz"
+    version: str(check_output("bcftools --version", shell=True))
     shell:
-        """
-            bcftools concat {input} | python scripts/het_polarization.py | bcftools view -O z > {output}
-            exit 0
-        """
+        "bcftools concat {input} | bcftools view -m2 -M2 - | python scripts/het_polarization.py | bcftools view -O z > {output}"
 
 rule index_variants:
     input:
         rules.concat_variants.output
     output:
         vcf_called_index = "vcf/{num}.{grouping}.{var_call}.vcf.gz.idx"
-    version: check_output("bcftools --version", shell=True)
+    version: str(check_output("bcftools --version", shell=True))
     shell:
-        """
-            bcftools index {input}
-        """
+        "bcftools index {input}"
 

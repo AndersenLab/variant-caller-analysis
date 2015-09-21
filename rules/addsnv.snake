@@ -1,4 +1,4 @@
-threads = 4
+from glob import glob
 
 rule addsnvs:
     input:
@@ -49,21 +49,15 @@ rule collate_snvs:
         "bam/{num}.individual.snps.sorted.bam",
         "bam/{num}.individual.snps.sorted.bam.bai"
     output:
-        "spikeins/{num}.txt"
-    shell:
-        """
-        mkdir -p spikeins
-        for i in `ls -1 addsnv_logs_{wildcards.num}.snps.bam/*`; do
-            grep "^snv" ${{i}}
-            grep "^snv" ${{i}} >> {output}
-        done;
-        if [[ -s {output} ]]
-        then
-            exit 0;
-        else
-            exit 1;
-        fi
-        """
+        spiked = "spikeins/{num}.txt"
+    run:
+        with open(output.spiked , "w") as f:
+            for addsnv_log in glob("addsnv_logs_{wildcards.num}.snps.bam/*".format(**locals())):
+                with open(addsnv_log, "r") as addsnv:
+                    for line in addsnv:
+                        if 'snv' in line:
+                            f.write(line)
+
 
 rule merge_joint_bams:
     # Merges in divergent panel of wild isolate variants
@@ -72,20 +66,16 @@ rule merge_joint_bams:
         merge_bams = expand("{pf}/{bams}.bam",pf = config["joint_bam_path"],  bams = config["joint_bams"])
     output:
         "bam/{num}.joint.snps.sorted.bam"
-    version: check_output("samtools --version", shell=True)
+    version: str(check_output("samtools --version", shell=True))
     shell:
-        """
-            samtools merge - {input.primary_bam} {input.merge_bams} | samtools sort -@ 6 -T {wildcards.num} -O bam > {output}
-        """
+        "samtools merge - {input.primary_bam} {input.merge_bams} | samtools sort -@ 6 -T {wildcards.num} -O bam > {output}"
 
 
 rule index_joint_bam:
     input:
-        "bam/{num}.joint.snps.sorted.bam"
+        rules.merge_joint_bams.output
     output:
         "bam/{num}.joint.snps.sorted.bam.bai"
-    version: check_output("samtools --version", shell=True)
+    version: str(check_output("samtools --version", shell=True))
     shell:
-        """
-            samtools index {input}
-        """
+        "samtools index {input}"
