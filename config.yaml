@@ -3,6 +3,7 @@ genome_name: WS245
 num_locations: 150
 num_location_files: 3
 bam_location: /lscr2/andersenlab/dec211/RUN/20150727_RIAIL/bam/E300.bam
+reference_sample: QX175
 joint_bam_path: /lscr2/andersenlab/dec211/RUN/20150727_RIAIL/bam
 joint_bams:
   - E351

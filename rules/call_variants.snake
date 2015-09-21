@@ -40,8 +40,21 @@ rule index_variants:
     input:
         rules.concat_variants.output
     output:
-        vcf_called_index = "vcf/{num}.{grouping}.{var_call}.vcf.gz.idx"
+        vcf_called_index = "vcf/{num}.{grouping}.{var_call}.vcf.gz.csi"
     version: str(check_output("bcftools --version", shell=True))
     shell:
         "bcftools index {input}"
 
+
+rule processed_vcf:
+    input:
+        rules.index_variants.output,
+        vcf = rules.concat_variants.output
+    output:
+        "vcf_processed/{num,\d+}.{grouping}.{var_call}.txt"
+    shell:
+        r"""
+            bcftools view -m2 -M2 {input.vcf} | \
+            bcftools query --exclude 'INDEL=1' --samples {config[reference_sample]} --format '%CHROM\t%POS\t%REF\t%ALT[\t%GT\t%TGT]\n' - | \
+            awk -v input={input.vcf} '{{print $0 "\t" input }}' > {output}
+        """
