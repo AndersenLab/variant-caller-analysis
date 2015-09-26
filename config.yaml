@@ -1,14 +1,11 @@
 reference_source: ftp://ftp.wormbase.org/pub/wormbase/species/c_elegans/sequence/genomic/c_elegans.PRJNA13758.WS245.genomic.fa.gz
 genome_name: WS245
-num_locations: 150
-num_location_files: 3
-bam_location: /lscr2/andersenlab/dec211/RUN/20150727_RIAIL/bam/E300.bam
-reference_sample: QX175
-joint_bam_path: /lscr2/andersenlab/dec211/RUN/20150727_RIAIL/bam
+num_locations: 100000
+num_location_files: 10
+bam_location: /lscr2/andersenlab/dec211/RUN/v2_snpset/bam/N2.bam
+reference_sample: N2
+joint_bam_path: /lscr2/andersenlab/dec211/RUN/v2_snpset/bam
 joint_bams:
-  - E351
-  - E35
-joint_set2:
   - CB4856
   - DL238
   - LKC34

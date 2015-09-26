@@ -6,14 +6,14 @@ varfiles = ["{0:0>2}".format(x) for x in range(1,config["num_location_files"] + 
 
 chrom = ["I","II","III","IV","V","X"]
 var_call = ["-m","-c"]
-grouping = ["individual", "joint"]
+grouping = ["individual", "joint"] # Add joint back
 
 
 rule all:
     input:
         "log/setup_genome.done",
-        expand("bam/{num}.{grouping}.snps.sorted.bam", num = varfiles, grouping = grouping),
-        expand("bam/{num}.{grouping}.snps.sorted.bam.bai", num = varfiles, grouping = grouping),
+        expand("bam/{num}.individual.snps.sorted.bam", num = varfiles),
+        expand("bam/{num}.individual.snps.sorted.bam.bai", num = varfiles),
         expand("spikeins/{num}.txt", num = varfiles),
         expand("vcf/{num}.{grouping}.{var_call}.vcf.gz", num = varfiles,  grouping = grouping, var_call = var_call),
         expand("vcf_processed/{num}.{grouping}.{var_call}.txt", num = varfiles,  grouping = grouping, var_call = var_call)
