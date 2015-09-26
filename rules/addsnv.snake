@@ -57,25 +57,3 @@ rule collate_snvs:
                     for line in addsnv:
                         if 'snv' in line:
                             f.write(line)
-
-
-rule merge_joint_bams:
-    # Merges in divergent panel of wild isolate variants
-    input:
-        primary_bam = "bam/{num}.individual.snps.sorted.bam",
-        merge_bams = expand("{pf}/{bams}.bam",pf = config["joint_bam_path"],  bams = config["joint_bams"])
-    output:
-        "bam/{num}.joint.snps.sorted.bam"
-    version: str(check_output("samtools --version", shell=True))
-    shell:
-        "samtools merge - {input.primary_bam} {input.merge_bams} | samtools sort -@ 6 -T {wildcards.num} -O bam > {output}"
-
-
-rule index_joint_bam:
-    input:
-        rules.merge_joint_bams.output
-    output:
-        "bam/{num}.joint.snps.sorted.bam.bai"
-    version: str(check_output("samtools --version", shell=True))
-    shell:
-        "samtools index {input}"

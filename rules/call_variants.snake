@@ -1,30 +1,30 @@
 
 rule call_variants_rare:
     input:
-        bam = "bam/{num}.{grouping}.snps.sorted.bam",
-        idx = "bam/{num}.{grouping}.snps.sorted.bam.bai"
+        bam = "bam/{num}.individual.snps.sorted.bam",
+        idx = "bam/{num}.individual.snps.sorted.bam.bai"
     output:
-        vcf = temp(expand("vcf/{{num}}.{{grouping}}.{chrom}.-m.vcf", chrom = chrom, var_call = var_call))
+        vcf = temp(expand("vcf/{{num}}.individual.{chrom}.-m.vcf", chrom = chrom, var_call = var_call))
     threads: 8
     version: str(check_output("bcftools --version", shell=True))
     message: "Calling {threads}"
     shell:
         """
-            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -m - > vcf/{wildcards.num}.{wildcards.grouping}.{{1}}.-m.vcf" ::: {chrom}
+            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -m - > vcf/{wildcards.num}.individual.{{1}}.-m.vcf" ::: {chrom}
         """
 
 rule call_variants_common:
     input:
-        bam = "bam/{num}.{grouping}.snps.sorted.bam",
-        idx = "bam/{num}.{grouping}.snps.sorted.bam.bai"
+        bam = "bam/{num}.individual.snps.sorted.bam",
+        idx = "bam/{num}.individual.snps.sorted.bam.bai"
     output:
-        vcf = temp(expand("vcf/{{num}}.{{grouping}}.{chrom}.-c.vcf", chrom = chrom, var_call = var_call))
+        vcf = temp(expand("vcf/{{num}}.individual.{chrom}.-c.vcf", chrom = chrom, var_call = var_call))
     threads: 8
     version: str(check_output("bcftools --version", shell=True))
     message: "Calling {threads}"
     shell:
         """
-            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -c - > vcf/{wildcards.num}.{wildcards.grouping}.{{1}}.-c.vcf" ::: {chrom}
+            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -c - > vcf/{wildcards.num}.individual.{{1}}.-c.vcf" ::: {chrom}
         """
 
 rule concat_variants:
@@ -51,7 +51,7 @@ rule processed_vcf:
         rules.index_variants.output,
         vcf = rules.concat_variants.output
     output:
-        "vcf_processed/{num,\d+}.{grouping}.{var_call}.txt"
+        "vcf_processed/{num,\d+}.individual.{var_call}.txt"
     shell:
         r"""
             bcftools view --samples={config[reference_sample]} -m2 -M2 {input.vcf} | vcf2tsv -g | \
