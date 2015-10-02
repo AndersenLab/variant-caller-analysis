@@ -16,7 +16,9 @@ rule all:
         expand("bam/{num}.individual.snps.sorted.bam.bai", num = varfiles),
         expand("spikeins/{num}.txt", num = varfiles),
         expand("vcf/{num}.{grouping}.{var_call}.vcf.gz", num = varfiles,  grouping = grouping, var_call = var_call),
-        expand("vcf_processed/{num}.{grouping}.{var_call}.txt", num = varfiles,  grouping = grouping, var_call = var_call)
+        expand("vcf_processed/{num}.{grouping}.{var_call}.txt", num = varfiles,  grouping = grouping, var_call = var_call),
+        "vcf_processed/var_calls.Rdata",
+        "vcf_processed/var_calls.tsv.gz"
 
 
 rule download_picard:

@@ -1,3 +1,4 @@
+from snakemake.utils import R
 
 rule call_variants_rare:
     input:
@@ -13,6 +14,21 @@ rule call_variants_rare:
             parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -m - > vcf/{wildcards.num}.individual.{{1}}.-m.vcf" ::: {chrom}
         """
 
+rule call_variants_rare_joint:
+    input:
+        bam = "bam/{num}.individual.snps.sorted.bam",
+        wi_bam = expand("{joint_bam_path}/{bam}.bam", joint_bam_path = config["joint_bam_path"], bam = config["joint_bams"]),
+        idx = "bam/{num}.individual.snps.sorted.bam.bai"
+    output:
+        vcf = temp(expand("vcf/{{num}}.joint.{chrom}.-m.vcf", chrom = chrom, var_call = var_call))
+    threads: 8
+    version: str(check_output("bcftools --version", shell=True))
+    message: "Calling {threads}"
+    shell:
+        """
+            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} {input.wi_bam} | bcftools call -v -m - > vcf/{wildcards.num}.joint.{{1}}.-m.vcf" ::: {chrom}
+        """
+
 rule call_variants_common:
     input:
         bam = "bam/{num}.individual.snps.sorted.bam",
@@ -25,6 +41,21 @@ rule call_variants_common:
     shell:
         """
             parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} | bcftools call -v -c - > vcf/{wildcards.num}.individual.{{1}}.-c.vcf" ::: {chrom}
+        """
+
+rule call_variants_common_joint:
+    input:
+        bam = "bam/{num}.individual.snps.sorted.bam",
+        wi_bam = expand("{joint_bam_path}/{bam}.bam", joint_bam_path = config["joint_bam_path"], bam = config["joint_bams"]),
+        idx = "bam/{num}.individual.snps.sorted.bam.bai"
+    output:
+        vcf = temp(expand("vcf/{{num}}.joint.{chrom}.-c.vcf", chrom = chrom, var_call = var_call))
+    threads: 8
+    version: str(check_output("bcftools --version", shell=True))
+    message: "Calling {threads}"
+    shell:
+        """
+            parallel --verbose --max-procs 6 --gnu "samtools mpileup -v -g -f {reference} -r {{1}} {input.bam} {input.wi_bam} | bcftools call -v -c - > vcf/{wildcards.num}.joint.{{1}}.-c.vcf" ::: {chrom}
         """
 
 rule concat_variants:
@@ -49,11 +80,36 @@ rule index_variants:
 rule processed_vcf:
     input:
         rules.index_variants.output,
-        vcf = rules.concat_variants.output
+        vcf = "vcf/{num}.{grouping}.{var_call}.vcf.gz"
     output:
-        "vcf_processed/{num,\d+}.individual.{var_call}.txt"
+        "vcf_processed/{num,\d+}.{grouping}.{var_call}.txt"
     shell:
         r"""
             bcftools view --samples={config[reference_sample]} -m2 -M2 {input.vcf} | vcf2tsv -g | \
             awk -v input={input.vcf} 'NR == 1 {{ print $0 "\tvarfile" }} NR > 1 {{print $0 "\t" input }}' > {output}
+        """
+
+rule concat_dataframe:
+    input:
+        expand("vcf/{num}.{grouping}.{var_call}.vcf.gz", num =  varfiles, grouping = grouping, var_call = var_call)
+    output:
+        out = "vcf_processed/var_calls.Rdata"
+    threads: 16
+    shell:
+        """
+             Rscript scripts/save_varsets.R
+        """
+
+rule generate_csv_output:
+    input:
+        "vcf_processed/var_calls.Rdata"
+    output:
+        "vcf_processed/var_calls.tsv.gz"
+    shell:
+        """
+            R -f <(echo -n '
+                  load("vcf_processed/var_calls.Rdata")
+                  write.table(results, file = "vcf_processed/var_calls.tsv", quote = F, row.names = F, sep = "\t", na = "")
+                 ')
+            gzip vcf_processed/var_calls.tsv
         """
